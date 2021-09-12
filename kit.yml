@@ -1,0 +1,11 @@
+commands:
+  get-google:
+    command:
+      curl https://google.com
+    description:
+      Fetch google's home page using curl
+  ping-google:
+    command:
+      ping google.com
+    description:
+      Pings google's home page
