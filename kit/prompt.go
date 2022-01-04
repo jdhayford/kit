@@ -113,12 +113,9 @@ func promptSelectArgument(kitArg KitArgument) (string, error) {
 
 	value := items[index]
 	if shouldGenerateItems && len(kitArg.OptionRegex) > 0 {
-		fmt.Println(value)
 		reg := regexp.MustCompile(kitArg.OptionRegex)
-		fmt.Println(reg)
 		bytes.NewBufferString(value)
 		match := reg.Find([]byte(value))
-		fmt.Println(match)
 		if match == nil {
 			fmt.Println("Unable to match selected value using option pattern")
 			os.Exit(1)
