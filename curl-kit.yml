@@ -1,0 +1,31 @@
+commands:
+  get-google:
+    command:
+      curl https://www.google.com
+    description:
+      Makes an HTTP GET request for google's home page using curl
+
+  get:
+    command:
+      curl @url
+    description:
+      Makes an HTTP GET request to a given url using curl
+    arguments:
+      url:
+        required: true
+        prompt: Provide url to get
+        type: text
+      
+  post:
+    command:
+      curl @url -X POST -d @data
+    description:
+      Fetch google's home page using curl
+    arguments:
+      url:
+        required: true
+        prompt: 
+        type: text
+      data:
+        required: true
+        type: text

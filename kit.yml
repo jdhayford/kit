@@ -1,11 +1,12 @@
 commands:
-  get-google:
+  dinspect:
     command:
-      curl https://google.com
+      docker ps @test
     description:
-      Fetch google's home page using curl
-  ping-google:
-    command:
-      ping google.com
-    description:
-      Pings google's home page
+      Gets running docker containers
+    arguments:
+      test:
+        required: true
+        prompt: Test select arg
+        type: select
+        optionCommand: docker ps

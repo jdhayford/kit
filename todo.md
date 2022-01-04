@@ -15,4 +15,8 @@
 
 - Steps
   - [x] Go program that when run, prints out file path of .kit file in cwd or parent..., if found, else prints no .kit
-  - [] Read kit file, parse yaml structure into some sort of go struct
+  - [x] Read kit file, parse yaml structure into some sort of go struct
+  - [x] Execute kit command, cancel, etc
+  - [x] Reorganize code structure
+  - [x] Support kit command arguments in yml
+  - [] Prompt user for kit argument values (text for now), template into command
