@@ -17,6 +17,7 @@ type KitArgument struct {
 	Required      bool     `yaml:"required"`
 	Options       []string `yaml:"options"`
 	OptionCommand string   `yaml:"optionCommand"`
+	OptionRegex   string   `yaml:"optionRegex"`
 	// Might want to make value an interface for non string type args
 	Value interface{}
 }
@@ -166,14 +167,27 @@ func (k Kit) Run(args []string) {
 	if len(args) > 0 {
 		command = k.GetCommandFromArgs(args)
 	} else {
-		command = k.GetCommandFromPrompt()
+		command = promptCommandSelectionForKit(k)
 	}
+
+	lastArg := command.PromptArguments()
+
+	commandPreview := command.FormatCommand(commandFormatOptions{
+		highlightArg: lastArg,
+		preview:      true,
+	})
+	fmt.Println(commandPreview)
+
+	clearLastNLines(1)
+	commandPreview = command.FormatCommand(commandFormatOptions{
+		execute: true,
+	})
+	fmt.Println(commandPreview)
 
 	// if err := promptRunConfirmation(commandStr); err != nil {
 	// 	os.Exit(1)
 	// }
-	fmt.Println(command.Command)
-	runCommand(command.Command)
+	runCommand(command.GenerateCommand())
 
 	// home, err := os.UserHomeDir()
 	// check(err)

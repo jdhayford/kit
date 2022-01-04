@@ -1,12 +1,39 @@
 commands:
-  dinspect:
+  inspect:
     command:
-      docker ps @test
+      docker inspect @container_id
     description:
       Gets running docker containers
     arguments:
-      test:
+      container_id:
         required: true
-        prompt: Test select arg
+        prompt: Select container to inspect
         type: select
         optionCommand: docker ps
+        optionRegex: ^\w+
+
+  logs:
+    command:
+      docker logs -f @container
+    description:
+      Gets and attaches to logs of a container
+    arguments:
+      container:
+        required: true
+        prompt: Select container
+        type: select
+        optionCommand: docker ps
+        optionRegex: ^\w+
+
+  exec:
+    command:
+      docker exec -it @container bash
+    description:
+      Runs attached bash session in container
+    arguments:
+      container:
+        required: true
+        prompt: Select container
+        type: select
+        optionCommand: docker ps
+        optionRegex: ^\w+

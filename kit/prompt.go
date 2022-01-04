@@ -1,9 +1,11 @@
 package kit
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/manifoldco/promptui"
@@ -90,6 +92,12 @@ func promptRunConfirmation(command string) error {
 func promptSelectArgument(kitArg KitArgument) (string, error) {
 	items := kitArg.Options
 
+	shouldGenerateItems := len(items) == 0 && len(kitArg.OptionCommand) > 0
+	if shouldGenerateItems {
+		rawOut := runCommandSilent(kitArg.OptionCommand)
+		items = strings.Split(rawOut, "\n")
+	}
+
 	prompt := promptui.Select{
 		// Templates:         templates,
 		Label:    fmt.Sprintf("Select value for %v argument", kitArg.Name),
@@ -103,7 +111,22 @@ func promptSelectArgument(kitArg KitArgument) (string, error) {
 		return "", err
 	}
 
-	return items[index], nil
+	value := items[index]
+	if shouldGenerateItems && len(kitArg.OptionRegex) > 0 {
+		fmt.Println(value)
+		reg := regexp.MustCompile(kitArg.OptionRegex)
+		fmt.Println(reg)
+		bytes.NewBufferString(value)
+		match := reg.Find([]byte(value))
+		fmt.Println(match)
+		if match == nil {
+			fmt.Println("Unable to match selected value using option pattern")
+			os.Exit(1)
+		}
+		value = string(match)
+	}
+
+	return value, nil
 }
 
 func promptArgument(kitArg KitArgument) (string, error) {
