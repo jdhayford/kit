@@ -11,23 +11,23 @@ class Kit < Formula
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.4/kit_0.0.4_Darwin_x86_64.tar.gz"
-      sha256 "cbbba2657f6f6490994fbba8cca132b7be67d1c8338d8e1faad246a25f498f08"
+      url "https://github.com/jdhayford/kit/releases/download/v0.0.5/kit_0.0.5_Darwin_x86_64.tar.gz"
+      sha256 "b797775190102bc39cb9610991869e79c1259ec93ac57a891773081748bebab0"
     end
     if Hardware::CPU.arm?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.4/kit_0.0.4_Darwin_arm64.tar.gz"
-      sha256 "70154004e0216282ff5d7180cac4fbaf782739f8b6926dc9130354dbf4fcfab6"
+      url "https://github.com/jdhayford/kit/releases/download/v0.0.5/kit_0.0.5_Darwin_arm64.tar.gz"
+      sha256 "d36f89106fbbe60f5dfad16ee47c71b0ac647d67bc7b4ac17cc0ae7993eca1b0"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.4/kit_0.0.4_Linux_x86_64.tar.gz"
-      sha256 "4d5f39fdee418e67fd7be0ae4228325d5d5d93487b31df3d1727112b12979e51"
+      url "https://github.com/jdhayford/kit/releases/download/v0.0.5/kit_0.0.5_Linux_x86_64.tar.gz"
+      sha256 "a2b6e36f334cacf3a256afdee0ce8eb8ce43c844081348a4233d0010ab49550b"
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.4/kit_0.0.4_Linux_arm64.tar.gz"
-      sha256 "33504b1900d29314cde14dc40a7f43251136e1399a222edc43a7e62b1f899b7a"
+      url "https://github.com/jdhayford/kit/releases/download/v0.0.5/kit_0.0.5_Linux_arm64.tar.gz"
+      sha256 "5264edb6dff304e38a2f6c7b712a5092b42df8db6d21794abce42087732504a1"
     end
   end
 
