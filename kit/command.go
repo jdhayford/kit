@@ -43,7 +43,6 @@ func runCommandSilent(command string) string {
 	cancel()
 
 	bytes, _ := io.ReadAll(&buff)
-	fmt.Println(string(bytes))
 	return string(bytes)
 }
 
