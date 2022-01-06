@@ -1,7 +1,6 @@
 package kit
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -10,6 +9,38 @@ import (
 
 	"github.com/manifoldco/promptui"
 )
+
+type argSelectItem struct {
+	Original string
+	HasMatch bool
+	Pre      string
+	Match    string
+	Post     string
+}
+
+// bellSkipper implements an io.WriteCloser that skips the terminal bell
+// character (ASCII code 7), and writes the rest to os.Stderr. It is used to
+// replace readline.Stdout, that is the package used by promptui to display the
+// prompts.
+//
+// This is a workaround for the bell issue documented in
+// https://github.com/manifoldco/promptui/issues/49.
+type bellSkipper struct{}
+
+// Write implements an io.WriterCloser over os.Stderr, but it skips the terminal
+// bell character.
+func (bs *bellSkipper) Write(b []byte) (int, error) {
+	const charBell = 7 // c.f. readline.CharBell
+	if len(b) == 1 && b[0] == charBell {
+		return 0, nil
+	}
+	return os.Stderr.Write(b)
+}
+
+// Close implements an io.WriterCloser over os.Stderr.
+func (bs *bellSkipper) Close() error {
+	return os.Stderr.Close()
+}
 
 func promptCommandSelectionForKit(k Kit) KitCommand {
 	kitCommands := k.GetCommands()
@@ -49,6 +80,7 @@ func promptCommandSelectionForKit(k Kit) KitCommand {
 		HideHelp:          true,
 		Searcher:          searcher,
 		StartInSearchMode: true,
+		Stdout:            &bellSkipper{},
 		// HideSelected: true,
 	}
 
@@ -96,14 +128,38 @@ func promptSelectArgument(kitArg KitArgument) (string, error) {
 	if shouldGenerateItems {
 		rawOut := runCommandSilent(kitArg.OptionCommand)
 		items = strings.Split(rawOut, "\n")
+
 	}
 
+	var displayItems []argSelectItem
+	for _, item := range items {
+		displayItem := argSelectItem{Original: item}
+		if len(kitArg.OptionRegex) > 0 {
+			reg := regexp.MustCompile(kitArg.OptionRegex)
+			loc := reg.FindIndex([]byte(item))
+			if loc != nil {
+				displayItem.HasMatch = true
+				displayItem.Pre = item[0:loc[0]]
+				displayItem.Match = item[loc[0]:loc[1]]
+				displayItem.Post = item[loc[1] : len(item)-1]
+			}
+		}
+
+		displayItems = append(displayItems, displayItem)
+	}
+
+	templates := &promptui.SelectTemplates{
+		Inactive: "  {{ .Original }}",
+		// Active:   promptui.IconSelect + " {{ .HasMatch | underline | faint }}",
+		Active: promptui.IconSelect + " {{if .HasMatch}}{{ .Pre | underline }}{{ .Match | underline | cyan }}{{ .Post | underline }}{{else}}{{ .Original | underline }}{{end}}",
+	}
 	prompt := promptui.Select{
-		// Templates:         templates,
-		Label:    fmt.Sprintf("Select value for %v argument", kitArg.Name),
-		Items:    items,
-		HideHelp: true,
-		// HideSelected: true,
+		Templates:    templates,
+		Label:        fmt.Sprintf("Select value for %v argument", kitArg.Name),
+		Items:        displayItems,
+		HideHelp:     true,
+		Stdout:       &bellSkipper{},
+		HideSelected: true,
 	}
 
 	index, _, err := prompt.Run()
@@ -114,7 +170,6 @@ func promptSelectArgument(kitArg KitArgument) (string, error) {
 	value := items[index]
 	if shouldGenerateItems && len(kitArg.OptionRegex) > 0 {
 		reg := regexp.MustCompile(kitArg.OptionRegex)
-		bytes.NewBufferString(value)
 		match := reg.Find([]byte(value))
 		if match == nil {
 			fmt.Println("Unable to match selected value using option pattern")
