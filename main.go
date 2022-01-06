@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"kit/kit"
 	"os"
 )
@@ -15,7 +16,8 @@ func main() {
 
 	kitFilePath, err := kit.FindKitFile()
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	targetKit := kit.ParseKitFile(kitFilePath)

@@ -5,7 +5,7 @@
 class Kit < Formula
   desc ""
   homepage ""
-  version "0.0.5"
+  version "0.0.6"
   license "MIT"
   bottle :unneeded
 

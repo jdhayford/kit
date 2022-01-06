@@ -60,5 +60,5 @@ func FindKitFile() (string, error) {
 		filePath = dirPath
 	}
 
-	return "", errors.New("no .kit file found")
+	return "", errors.New("no kit.yml file found")
 }
