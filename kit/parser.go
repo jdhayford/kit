@@ -4,23 +4,36 @@ import (
 	"errors"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 const kitFileName = "kit.yml"
+const kitRefFileName = "kitref.yml"
 
-func ParseKitFile(filePath string) Kit {
+func ParseKitFile(filePath string) (Kit, error) {
+	kit := newKit()
+
+	home, _ := os.UserHomeDir()
+	if strings.HasPrefix(filePath, "~/") {
+		filePath = filepath.Join(home, filePath[2:])
+	}
+
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		panic(errors.New("parseKitFile(): File doesnt exist"))
+		return kit, &KitFileNotFoundError{}
 	}
 
 	data, err := os.ReadFile(filePath)
-	check(err)
+	if err != nil {
+		return kit, &InvalidKitFileError{}
+	}
 
-	kit := newKit()
-	yaml.Unmarshal(data, kit)
-	check(err)
+	err = yaml.Unmarshal(data, &kit)
+	if err != nil {
+		return kit, &InvalidKitFileError{}
+	}
 
 	// TODO: VALIDATION LOGIC
 
@@ -39,7 +52,7 @@ func ParseKitFile(filePath string) Kit {
 		kit.Commands[k] = v
 	}
 
-	return kit
+	return kit, nil
 }
 
 func FindKitFile() (string, error) {
@@ -61,4 +74,80 @@ func FindKitFile() (string, error) {
 	}
 
 	return "", errors.New("no kit.yml file found")
+}
+
+func GetKitRefList() (KitRefList, error) {
+	kitRefList := newKitRefList()
+
+	kitDir := getOrMakeKitDir()
+	kitRefPath := path.Join(kitDir, kitRefFileName)
+
+	if _, err := os.Stat(kitRefPath); os.IsNotExist(err) {
+		content := []byte("")
+		writeErr := os.WriteFile(kitRefPath, content, 0644)
+		check(writeErr)
+		return newKitRefList(), nil
+	}
+
+	data, err := os.ReadFile(kitRefPath)
+	if err != nil {
+		return kitRefList, &InvalidKitRefFileError{}
+	}
+
+	err = yaml.Unmarshal(data, &kitRefList)
+	if err != nil {
+		return kitRefList, &InvalidKitRefFileError{}
+	}
+
+	return kitRefList, nil
+}
+
+func getOrMakeKitDir() string {
+	home, _ := os.UserHomeDir()
+	kitDirPath := path.Join(home, "/.kit")
+
+	if _, err := os.Stat(kitDirPath); os.IsNotExist(err) {
+		makeErr := os.Mkdir(kitDirPath, 0o755)
+		check(makeErr)
+	}
+
+	return kitDirPath
+}
+
+func FindUserKit(name string) (*Kit, error) {
+	kitRefList, err := GetKitRefList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, kitRef := range kitRefList.References {
+		kit, err := ParseKitFile(kitRef.Path)
+		if err != nil {
+			continue
+		}
+
+		if kitRef.Alias == name || kit.Name == name {
+			return &kit, nil
+		}
+	}
+	return nil, &NoMatchingKitError{}
+}
+
+func GetUserKits() []Kit {
+	var userKits []Kit
+
+	kitRefList, err := GetKitRefList()
+	if err != nil {
+		return userKits
+	}
+
+	for _, kitRef := range kitRefList.References {
+		kit, err := ParseKitFile(kitRef.Path)
+		if err != nil {
+			continue
+		}
+
+		userKits = append(userKits, kit)
+	}
+	return userKits
 }

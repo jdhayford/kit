@@ -1,22 +1,16 @@
-- When run using `kit`, or `kit [cmd]` (replace `kit` with normal go run for now)
-    - Searches cwd (then up the file directory), for .kit file
-    - Parses the .kit file for kit commands
-    - Provides a Arrow Key navigable interface for those commands
-    - Selecting one will execute that given commands
+- Search for .kit folder
+  - Create if does not exist
+- Check for kitref.yml file
+  - Create if does not exist
+- Find kit for kit refs
+  - Where kit does not exist, print warning and ignore
+- Print out list of global kit
 
-- .kit file
-    - YAML file
-    - structure
-        - commands (arr)
-          - command-alias
-            - command itself
-            - [optional] description
+kitref.yml
+- alias - str|null
+- url - str|null
+- path - str
+- global - bool
 
 
-- Steps
-  - [x] Go program that when run, prints out file path of .kit file in cwd or parent..., if found, else prints no .kit
-  - [x] Read kit file, parse yaml structure into some sort of go struct
-  - [x] Execute kit command, cancel, etc
-  - [x] Reorganize code structure
-  - [x] Support kit command arguments in yml
-  - [] Prompt user for kit argument values (text for now), template into command
+- Add global

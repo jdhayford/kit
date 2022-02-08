@@ -98,6 +98,7 @@ func (kc KitCommand) GenerateCommand() string {
 }
 
 type Kit struct {
+	Name     string                `yaml: "name"`
 	Commands map[string]KitCommand `yaml:"commands"`
 }
 

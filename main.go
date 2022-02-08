@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"kit/kit"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -14,12 +14,17 @@ func main() {
 		args = os.Args[1:]
 	}
 
-	kitFilePath, err := kit.FindKitFile()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+	firstArg := ""
+	if len(args) > 0 {
+		firstArg = args[0]
 	}
 
-	targetKit := kit.ParseKitFile(kitFilePath)
-	targetKit.Run(args)
+	switch {
+	case strings.HasPrefix(firstArg, "_"):
+		return
+	case strings.HasPrefix(firstArg, "@"):
+		kit.RunUserStrategy(args)
+	default:
+		kit.RunContextStrategy(args)
+	}
 }
