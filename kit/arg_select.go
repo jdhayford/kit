@@ -50,9 +50,34 @@ var argSelectTemp = `
   {{- end}}
 `
 
-var argChoiceTmpl = `
-{{if .HasMatch}}{{ .Pre }}{{ .Match }}{{ .Post  }}{{else}}{{ .Original }}{{end}}
-`
+func (s *ArgSelectModel) formatSelectedChoiceStyle(c *selection.Choice) string {
+	var (
+		hasMatch bool
+		pre      string
+		match    string
+		post     string
+	)
+	choice, _ := c.Value.(string)
+
+	if len(s.argument.OptionRegex) > 0 {
+		reg := regexp.MustCompile(s.argument.OptionRegex)
+		loc := reg.FindIndex([]byte(choice))
+		if loc != nil {
+			hasMatch = true
+			pre = choice[0:loc[0]]
+			match = choice[loc[0]:loc[1]]
+			post = choice[loc[1]:]
+		}
+	} else {
+		return aurora.Underline(choice).Cyan().String()
+	}
+
+	if hasMatch {
+		return aurora.Underline(pre).String() + aurora.Underline(match).Cyan().String() + aurora.Underline(post).String()
+	} else {
+		return choice
+	}
+}
 
 func (s *ArgSelectModel) Init() tea.Cmd {
 	items := s.argument.Options
@@ -66,44 +91,12 @@ func (s *ArgSelectModel) Init() tea.Cmd {
 	sel := selection.New(fmt.Sprintf("Select value for %v argument", s.argument.Name),
 		selection.Choices(items))
 
-	// for _, item := range items {
-	// 	fmt.Println(item)
-	// }
-
 	sel.Template = argSelectTemp
 	sel.Filter = nil
 	sel.FilterPrompt = ""
-	sel.SelectedChoiceStyle = func(c *selection.Choice) string {
-		var (
-			hasMatch bool
-			pre      string
-			match    string
-			post     string
-		)
-		choice, _ := c.Value.(string)
-
-		if len(s.argument.OptionRegex) > 0 {
-			reg := regexp.MustCompile(s.argument.OptionRegex)
-			loc := reg.FindIndex([]byte(choice))
-			if loc != nil {
-				hasMatch = true
-				pre = choice[0:loc[0]]
-				match = choice[loc[0]:loc[1]]
-				post = choice[loc[1]:]
-			}
-		} else {
-			return aurora.Underline(choice).Cyan().String()
-		}
-
-		if hasMatch {
-			return aurora.Underline(pre).String() + aurora.Underline(match).Cyan().String() + aurora.Underline(post).String()
-		} else {
-			return choice
-		}
-	}
+	sel.SelectedChoiceStyle = s.formatSelectedChoiceStyle
 	sel.UnselectedChoiceStyle = func(c *selection.Choice) string {
-		choice, _ := c.Value.(string)
-		return choice
+		return c.Value.(string)
 	}
 
 	s.selection = *selection.NewModel(sel)
@@ -148,7 +141,6 @@ func (s *ArgSelectModel) View() string {
 	var b strings.Builder
 
 	b.WriteString(s.selection.View())
-
 	return b.String()
 }
 
