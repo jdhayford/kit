@@ -44,7 +44,15 @@ var temp = `
   {{- else }}
     {{- print "  " (Unselected $choice) "\n" }}
   {{- end }}
-{{- end}}`
+
+  {{- end}}
+
+{{- with (index .Choices $.SelectedIndex) }}{{- with .Value }}
+{{ Faint "---------" }} {{ Foreground "#63FFFF" .Alias }} {{ Faint "---------" }}
+{{ Faint "Command"}} - {{ Faint .Command }}
+{{ Faint "Description"}} - {{ Faint .Description }}
+{{- end }}{{- end }}
+`
 
 func customFilter(filter string, choice *selection.Choice) bool {
 	commandChoice, _ := choice.Value.(KitCommand)
@@ -54,7 +62,7 @@ func customFilter(filter string, choice *selection.Choice) bool {
 }
 
 func (s *CmdSelectModel) Init() tea.Cmd {
-	sel := selection.New("? Kit:",
+	sel := selection.New("",
 		selection.Choices(s.commands))
 	sel.Template = temp
 	sel.Filter = customFilter
