@@ -251,7 +251,7 @@ func (ks KitSet) Run(args []string) {
 	if len(args) > 0 {
 		command = ks.GetCommandFromArgs(args)
 	} else {
-		command = promptCommandSelectionForKitSet(ks)
+		command = RunCommandSelectPrompt(ks.GetCommands())
 	}
 
 	command.PromptArguments()
