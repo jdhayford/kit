@@ -42,8 +42,8 @@ func (bs *bellSkipper) Close() error {
 	return os.Stderr.Close()
 }
 
-func promptCommandSelectionForKit(k Kit) KitCommand {
-	kitCommands := k.GetCommands()
+func promptCommandSelectionForKitSet(ks KitSet) KitCommand {
+	kitCommands := ks.GetCommands()
 
 	searcher := func(input string, index int) bool {
 		kitCommand := kitCommands[index]

@@ -3,6 +3,7 @@ module kit
 go 1.17
 
 require (
+	github.com/alessio/shellescape v1.4.1
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/manifoldco/promptui v0.8.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b

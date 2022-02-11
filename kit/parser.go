@@ -1,7 +1,7 @@
 package kit
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -55,6 +55,16 @@ func ParseKitFile(filePath string) (Kit, error) {
 	return kit, nil
 }
 
+func ParseKitFromKitRef(kitRef KitRef) (Kit, error) {
+	kit, err := ParseKitFile(kitRef.Path)
+	if err != nil {
+		return Kit{}, err
+	}
+
+	kit.Ref = &kitRef
+	return kit, nil
+}
+
 func FindKitFile() (string, error) {
 	filePath, err := os.Getwd()
 	if err != nil {
@@ -73,13 +83,28 @@ func FindKitFile() (string, error) {
 		filePath = dirPath
 	}
 
-	return "", errors.New("no kit.yml file found")
+	return "", &NoContextKitFoundError{}
+}
+
+func FindContextKit() (Kit, error) {
+	kitFilePath, err := FindKitFile()
+	if err != nil {
+		return Kit{}, err
+	}
+
+	contextKit, err := ParseKitFile(kitFilePath)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	return contextKit, nil
 }
 
 func GetKitRefList() (KitRefList, error) {
 	kitRefList := newKitRefList()
 
-	kitDir := getOrMakeKitDir()
+	kitDir := GetOrMakeKitDir()
 	kitRefPath := path.Join(kitDir, kitRefFileName)
 
 	if _, err := os.Stat(kitRefPath); os.IsNotExist(err) {
@@ -102,7 +127,7 @@ func GetKitRefList() (KitRefList, error) {
 	return kitRefList, nil
 }
 
-func getOrMakeKitDir() string {
+func GetOrMakeKitDir() string {
 	home, _ := os.UserHomeDir()
 	kitDirPath := path.Join(home, "/.kit")
 
@@ -114,23 +139,16 @@ func getOrMakeKitDir() string {
 	return kitDirPath
 }
 
-func FindUserKit(name string) (*Kit, error) {
-	kitRefList, err := GetKitRefList()
-	if err != nil {
-		return nil, err
+func GetOrMakeKitExecDir() string {
+	kitDir := GetOrMakeKitDir()
+	kitExecDirPath := path.Join(kitDir, "/exec")
+
+	if _, err := os.Stat(kitExecDirPath); os.IsNotExist(err) {
+		makeErr := os.Mkdir(kitExecDirPath, 0o755)
+		check(makeErr)
 	}
 
-	for _, kitRef := range kitRefList.References {
-		kit, err := ParseKitFile(kitRef.Path)
-		if err != nil {
-			continue
-		}
-
-		if kitRef.Alias == name || kit.Name == name {
-			return &kit, nil
-		}
-	}
-	return nil, &NoMatchingKitError{}
+	return kitExecDirPath
 }
 
 func GetUserKits() []Kit {
@@ -142,7 +160,7 @@ func GetUserKits() []Kit {
 	}
 
 	for _, kitRef := range kitRefList.References {
-		kit, err := ParseKitFile(kitRef.Path)
+		kit, err := ParseKitFromKitRef(kitRef)
 		if err != nil {
 			continue
 		}
@@ -150,4 +168,28 @@ func GetUserKits() []Kit {
 		userKits = append(userKits, kit)
 	}
 	return userKits
+}
+
+func FindUserKit(name string) (Kit, error) {
+	userKits := GetUserKits()
+
+	for _, kit := range userKits {
+		if kit.Ref.Alias == name || kit.Name == name {
+			return kit, nil
+		}
+	}
+	return Kit{}, &NoMatchingKitError{}
+}
+
+func GetGlobalUserKits() []Kit {
+	var globalUserKits []Kit
+	userKits := GetUserKits()
+
+	for _, kit := range userKits {
+		if kit.Ref.Global {
+			globalUserKits = append(globalUserKits, kit)
+		}
+	}
+
+	return globalUserKits
 }

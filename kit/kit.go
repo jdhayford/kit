@@ -37,17 +37,21 @@ func (kc KitCommand) GetArguments() []KitArgument {
 	return arguments
 }
 
+func (kc KitCommand) GetLineCount() int {
+	return strings.Count(kc.Command, "\n") + 1
+}
+
 type commandFormatOptions struct {
-	highlightArg string
-	preview      bool
-	execute      bool
+	highlightArg      string
+	includePrefixes   bool
+	highlightPrefixes bool
 }
 
 func (kc *KitCommand) PromptArguments() string {
 	var lastArg string
 	for _, arg := range kc.GetArguments() {
 		lastArg = arg.Name
-		opts := commandFormatOptions{highlightArg: arg.Name, preview: true}
+		opts := commandFormatOptions{highlightArg: arg.Name, includePrefixes: true}
 		commandPreview := kc.FormatCommand(opts)
 		fmt.Println(commandPreview)
 		val, err := promptArgument(arg)
@@ -65,11 +69,33 @@ func (kc *KitCommand) PromptArguments() string {
 func (kc KitCommand) FormatCommand(options commandFormatOptions) string {
 	// Parse command, looking for template spots, replace with arguments found
 	command := kc.Command
+	// lineCount := kc.GetLineCount()
 
-	if options.execute {
-		command = aurora.Green("$ ").String() + command
-	} else if options.preview {
-		command = aurora.Gray(8-1, "$ ").String() + command
+	// Single line prefix
+	if options.includePrefixes {
+		firstPrefixContent := "$ "
+		// if lineCount > 1 {
+		// 	firstPrefixContent = "0 "
+		// }
+
+		if options.highlightPrefixes {
+			command = aurora.Green(firstPrefixContent).String() + command
+		} else {
+			command = aurora.Gray(8-1, firstPrefixContent).String() + command
+		}
+
+		// // Multi-line prefixes
+		// var tempLines []string
+		// rawLines := strings.Split(command, "\n")
+		// for i, line := range rawLines {
+		// 	if i == 0 {
+		// 		tempLines = append(tempLines, line)
+		// 		continue
+		// 	}
+		// 	num := aurora.Gray(8-1, fmt.Sprint(i)).String()
+		// 	tempLines = append(tempLines, num+" "+line)
+		// }
+		// command = strings.Join(tempLines, "\n")
 	}
 
 	for _, v := range kc.Arguments {
@@ -100,10 +126,21 @@ func (kc KitCommand) GenerateCommand() string {
 type Kit struct {
 	Name     string                `yaml: "name"`
 	Commands map[string]KitCommand `yaml:"commands"`
+
+	// Note: Ref's should always be assigned to any User Kits that are loaded in
+	// 		 Lack of a Ref indicates that a Kit is being used in context on execution
+	Ref *KitRef
 }
 
 func newKit() Kit {
 	return Kit{Commands: make(map[string]KitCommand)}
+}
+
+func (k Kit) IsEmpty() bool {
+	emptyName := k.Name == ""
+	emptyCommands := len(k.Commands) == 0
+	emptyRef := k.Ref == nil
+	return emptyName && emptyCommands && emptyRef
 }
 
 func (k Kit) GetCommands() []KitCommand {
@@ -144,51 +181,91 @@ func (k Kit) GetCommandFromArgs(args []string) KitCommand {
 	return kitCommand
 }
 
-func (k Kit) GetCommandFromPrompt() KitCommand {
-	kitCommand := promptCommandSelectionForKit(k)
-
-	lastArg := kitCommand.PromptArguments()
-
-	commandPreview := kitCommand.FormatCommand(commandFormatOptions{
-		highlightArg: lastArg,
-		preview:      true,
-	})
-	fmt.Println(commandPreview)
-
-	clearLastNLines(1)
-	commandPreview = kitCommand.FormatCommand(commandFormatOptions{
-		execute: true,
-	})
-	fmt.Println(commandPreview)
-	return kitCommand
+// KitSet represents a collection of kits for execution, with at most one PrimaryKit, and the rest being OtherKits
+// 	Determination of a PrimaryKit goes as follows:
+// 		If there is only one kit, it will be the PrimaryKit.
+// 		If there are multiple kits, and one is deemed a context kit, it will be the PrimaryKit
+// 		Otherwise, there will be no PrimaryKit
+type KitSet struct {
+	PrimaryKit Kit
+	OtherKits  []Kit
 }
 
-func (k Kit) Run(args []string) {
-	var command KitCommand
-	if len(args) > 0 {
-		command = k.GetCommandFromArgs(args)
-	} else {
-		command = promptCommandSelectionForKit(k)
+func (ks KitSet) HasPrimaryKit() bool {
+	return !ks.PrimaryKit.IsEmpty()
+}
+
+func MakeKitSet(kits ...Kit) KitSet {
+	kitSet := KitSet{}
+	for _, kit := range kits {
+		if kit.Ref == nil && kitSet.PrimaryKit.IsEmpty() {
+			kitSet.PrimaryKit = kit
+		} else {
+			kitSet.OtherKits = append(kitSet.OtherKits, kit)
+		}
+	}
+	return kitSet
+}
+
+func (ks KitSet) GetCommands() []KitCommand {
+	kitCommands := ks.PrimaryKit.GetCommands()
+	for _, otherKit := range ks.OtherKits {
+		for _, command := range otherKit.GetCommands() {
+			if ks.HasPrimaryKit() {
+				command.Alias = "@" + otherKit.Ref.Alias + " " + command.Alias
+			}
+			kitCommands = append(kitCommands, command)
+		}
+	}
+	return kitCommands
+}
+
+// GetCommandFromArgs attempts to match the supplied args to an existing command the PrimaryKit or OtherKits
+func (ks KitSet) GetCommandFromArgs(args []string) KitCommand {
+	firstArg := args[0]
+
+	// Check PrimaryKit for match
+	for _, c := range ks.PrimaryKit.Commands {
+		if firstArg == c.Alias {
+			return c
+		}
 	}
 
-	lastArg := command.PromptArguments()
+	// No matching command found on PrimaryKit, check OtherKits
+	for _, otherKit := range ks.OtherKits {
+		for _, c := range otherKit.Commands {
+			if firstArg == c.Alias {
+				return c
+			}
+		}
+	}
+
+	fmt.Println("No kit command found for:", firstArg)
+	os.Exit(1)
+
+	return KitCommand{}
+}
+
+func (ks KitSet) Run(args []string) {
+	var command KitCommand
+	if len(args) > 0 {
+		command = ks.GetCommandFromArgs(args)
+	} else {
+		command = promptCommandSelectionForKitSet(ks)
+	}
+
+	command.PromptArguments()
 
 	commandPreview := command.FormatCommand(commandFormatOptions{
-		highlightArg: lastArg,
-		preview:      true,
-	})
-	fmt.Println(commandPreview)
-
-	clearLastNLines(1)
-	commandPreview = command.FormatCommand(commandFormatOptions{
-		execute: true,
+		includePrefixes:   true,
+		highlightPrefixes: true,
 	})
 	fmt.Println(commandPreview)
 
 	// if err := promptRunConfirmation(commandStr); err != nil {
 	// 	os.Exit(1)
 	// }
-	runCommand(command.GenerateCommand())
+	runCommand(command.Alias, command.GenerateCommand())
 
 	// home, err := os.UserHomeDir()
 	// check(err)

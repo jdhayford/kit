@@ -7,18 +7,24 @@ import (
 )
 
 func RunContextStrategy(args []string) {
-	kitFilePath, err := FindKitFile()
+	// Create KitSet from global kits and context kit (if context kit is found)
+	kits := GetGlobalUserKits()
+
+	contextKit, err := FindContextKit()
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		if _, ok := err.(*NoContextKitFoundError); !ok {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
 	}
 
-	targetKit, err := ParseKitFile(kitFilePath)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+	if !contextKit.IsEmpty() {
+		kits = append(kits, contextKit)
 	}
-	targetKit.Run(args)
+
+	kitSet := MakeKitSet(kits...)
+
+	kitSet.Run(args)
 }
 
 func RunUserStrategy(args []string) {
@@ -26,9 +32,6 @@ func RunUserStrategy(args []string) {
 		fmt.Println("Invalid user kit name")
 		return
 	}
-
-	var test string
-	fmt.Println(test)
 
 	kitName := strings.TrimPrefix(args[0], "@")
 	userKit, err := FindUserKit(kitName)
@@ -42,6 +45,6 @@ func RunUserStrategy(args []string) {
 		kitArgs = args[1:]
 	}
 
-	userKit.Run(kitArgs)
-	// targetKit.Run(args)
+	kitSet := MakeKitSet(userKit)
+	kitSet.Run(kitArgs)
 }

@@ -1,21 +1,7 @@
-package main
+package test
 
-import (
-	"fmt"
-	"os"
-	"path"
-)
+import "testing"
 
-func getKitDir() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("Something went wrong retrieving the user home directory")
-	}
+func TestCombineKits(t *testing.T) {
 
-	kitDirPath := path.Join(home, "/.kit")
-	fmt.Println(kitDirPath)
-}
-
-func main() {
-	getKitDir()
 }

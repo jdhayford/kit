@@ -31,3 +31,11 @@ type NoMatchingKitError struct {
 func (e *NoMatchingKitError) Error() string {
 	return "No matching user kit found"
 }
+
+type NoContextKitFoundError struct {
+	error
+}
+
+func (e *NoContextKitFoundError) Error() string {
+	return "No kit.yml file found"
+}
