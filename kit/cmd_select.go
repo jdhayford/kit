@@ -30,6 +30,10 @@ var temp = `
   {{- print .FilterPrompt " " .FilterInput }}
 {{ end }}
 
+{{- if and .FilterInput (eq (len .Choices) 0) -}}
+	{{- Faint "    No matching choices\n" }}
+{{- end -}}
+
 {{- range  $i, $choice := .Choices }}
   {{- if IsScrollUpHintPosition $i }}
     {{- "⇡ " -}}
@@ -47,11 +51,15 @@ var temp = `
 
   {{- end}}
 
-{{- with (index .Choices $.SelectedIndex) }}{{- with .Value }}
+{{- if gt (len .Choices) 0 }}
+{{- with (index .Choices $.SelectedIndex) }}
+{{- with .Value }}
 {{ Faint "---------" }} {{ Foreground "#63FFFF" .Alias }} {{ Faint "---------" }}
 {{ Faint "Command"}} - {{ Faint .Command }}
 {{ Faint "Description"}} - {{ Faint .Description }}
-{{- end }}{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 `
 
 func customFilter(filter string, choice *selection.Choice) bool {
@@ -91,6 +99,9 @@ func (s *CmdSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case keyMsg.String() == "enter":
 		c, err := s.selection.Value()
 		if err != nil {
+			if c == nil {
+				return s, nil
+			}
 			s.err = err
 			return s, tea.Quit
 		}

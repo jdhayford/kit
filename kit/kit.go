@@ -54,7 +54,7 @@ func (kc *KitCommand) PromptArguments() string {
 		opts := commandFormatOptions{highlightArg: arg.Name, includePrefixes: true}
 		commandPreview := kc.FormatCommand(opts)
 		fmt.Println(commandPreview)
-		val, err := promptArgument(arg)
+		val, err := RunArgSelectPrompt(arg)
 		if err != nil {
 			panic(err)
 		}
