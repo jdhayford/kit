@@ -53,24 +53,21 @@ func (kc *KitCommand) PromptArguments() string {
 		lastArg = arg.Name
 		opts := commandFormatOptions{highlightArg: arg.Name, includePrefixes: true}
 		commandPreview := kc.FormatCommand(opts)
-		fmt.Println(commandPreview)
 
 		var val string
 		var err error
 
 		switch arg.Type {
 		case "select":
-			val, err = RunArgSelectPrompt(arg)
+			val, err = RunArgSelectPrompt(arg, commandPreview)
 		case "text":
-			val, err = RunArgTextPrompt(arg)
+			val, err = RunArgTextPrompt(arg, commandPreview)
 		}
 		if err != nil {
 			panic(err)
 		}
 		arg.Value = val
 		kc.Arguments[arg.Name] = arg
-
-		clearLastLine()
 	}
 	return lastArg
 }

@@ -15,7 +15,7 @@ var argTextTmpl = `
 {{- end }} {{ .Input -}}
 `
 
-func RunArgTextPrompt(kitArg KitArgument) (string, error) {
+func RunArgTextPrompt(kitArg KitArgument, commandPreview string) (string, error) {
 	var prefix string
 	if kitArg.Required {
 		prefix = aurora.Red("* ").String()
@@ -26,7 +26,12 @@ func RunArgTextPrompt(kitArg KitArgument) (string, error) {
 		prompt = kitArg.Prompt
 	}
 
-	input := textinput.New(prefix + prompt + "\n")
+	var preview string
+	if len(commandPreview) > 0 {
+		preview = commandPreview + "\n"
+	}
+
+	input := textinput.New(preview + prefix + prompt + "\n")
 	input.Template = argTextTmpl
 	input.ResultTemplate = ""
 	input.Validate = func(s string) bool {

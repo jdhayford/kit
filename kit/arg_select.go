@@ -12,16 +12,18 @@ import (
 )
 
 type ArgSelectModel struct {
+	commandPreview string
 	generatedItems bool
 	argument       KitArgument
+
 	choices        []string
 	selectedChoice string
 	selection      selection.Model
 	err            error
 }
 
-func newArgSelectModel(kitArg KitArgument) *ArgSelectModel {
-	return &ArgSelectModel{argument: kitArg}
+func newArgSelectModel(kitArg KitArgument, commandPreview string) *ArgSelectModel {
+	return &ArgSelectModel{argument: kitArg, commandPreview: commandPreview}
 }
 
 var argSelectTemp = `
@@ -88,7 +90,8 @@ func (s *ArgSelectModel) Init() tea.Cmd {
 		s.generatedItems = true
 	}
 
-	sel := selection.New(fmt.Sprintf("Select value for %v argument", s.argument.Name),
+	prompt := s.commandPreview + "\n" + fmt.Sprintf("Select value for %v argument", s.argument.Name)
+	sel := selection.New(prompt,
 		selection.Choices(items))
 
 	sel.Template = argSelectTemp
@@ -144,8 +147,8 @@ func (s *ArgSelectModel) View() string {
 	return b.String()
 }
 
-func RunArgSelectPrompt(kitArg KitArgument) (string, error) {
-	model := newArgSelectModel(kitArg)
+func RunArgSelectPrompt(kitArg KitArgument, cmdPreview string) (string, error) {
+	model := newArgSelectModel(kitArg, cmdPreview)
 
 	p := tea.NewProgram(model)
 
@@ -168,6 +171,5 @@ func RunArgSelectPrompt(kitArg KitArgument) (string, error) {
 		choice = string(match)
 	}
 
-	fmt.Println(choice)
 	return choice, nil
 }
