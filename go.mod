@@ -8,6 +8,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	github.com/charmbracelet/bubbles v0.10.2
 	github.com/charmbracelet/bubbletea v0.19.3
+	github.com/erikgeiser/promptkit v0.6.0
 )
 
 require (
@@ -15,7 +16,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.4.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/containerd/console v1.0.2 // indirect
-	github.com/erikgeiser/promptkit v0.6.0 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a // indirect
