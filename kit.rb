@@ -5,29 +5,29 @@
 class Kit < Formula
   desc ""
   homepage ""
-  version "0.0.6"
+  version "0.0.7"
   license "MIT"
   bottle :unneeded
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.6/kit_0.0.6_Darwin_x86_64.tar.gz"
-      sha256 "440c4a816e6f3d39e7ce7272c4c9dfd533d58935ae5c7891d83d2d2ddb607a02"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Darwin_x86_64.tar.gz"
+      sha256 "8e80f011f6eb271410166240170901e1ff90854c3a8c2432c634ad0b7377f07f"
     end
     if Hardware::CPU.arm?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.6/kit_0.0.6_Darwin_arm64.tar.gz"
-      sha256 "9f2bd5a52bd25f932a846885252b9adc635b57da1ef560b417d5a8456871167e"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Darwin_arm64.tar.gz"
+      sha256 "6cd49af0690d296e6820aec64474e903908b2b7841da82bfa3f6013d43b4edfc"
     end
   end
 
   on_linux do
     if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.6/kit_0.0.6_Linux_x86_64.tar.gz"
-      sha256 "b76971f6a573cff07d73d3fb19fcd42a756792bc85608a5784e545b2e71df5a4"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Linux_x86_64.tar.gz"
+      sha256 "a61b5ec6365cecd7cee6336dde3beb67d64c51c9ef633a3281e520e1345b44e2"
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/jdhayford/kit/releases/download/v0.0.6/kit_0.0.6_Linux_arm64.tar.gz"
-      sha256 "d90519d628b3aca9d4f84918a5b8d436b79cd79f8d61022cd89eb1e9778afeaf"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Linux_arm64.tar.gz"
+      sha256 "d924bf5f67aeb6df72e0b69cd3cebd27816c246bf180ddda681d2ff8a9e87a7d"
     end
   end
 
