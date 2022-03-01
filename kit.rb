@@ -5,36 +5,47 @@
 class Kit < Formula
   desc ""
   homepage ""
-  version "0.0.7"
+  version "0.0.8"
   license "MIT"
-  bottle :unneeded
 
   on_macos do
-    if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Darwin_x86_64.tar.gz"
-      sha256 "8e80f011f6eb271410166240170901e1ff90854c3a8c2432c634ad0b7377f07f"
-    end
     if Hardware::CPU.arm?
-      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Darwin_arm64.tar.gz"
-      sha256 "6cd49af0690d296e6820aec64474e903908b2b7841da82bfa3f6013d43b4edfc"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.8/kit_0.0.8_Darwin_arm64.tar.gz"
+      sha256 "5002dad48e87d2c47326bf6fd7390862680911c2251223969fd8bcebdd48575b"
+
+      def install
+        bin.install "kit"
+      end
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/jdhayford/kit/releases/download/0.0.8/kit_0.0.8_Darwin_x86_64.tar.gz"
+      sha256 "4b045743efbd66f0de15457c360c10d80eb94dae42d68bfe66c01c876a2c6878"
+
+      def install
+        bin.install "kit"
+      end
     end
   end
 
   on_linux do
-    if Hardware::CPU.intel?
-      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Linux_x86_64.tar.gz"
-      sha256 "a61b5ec6365cecd7cee6336dde3beb67d64c51c9ef633a3281e520e1345b44e2"
-    end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/jdhayford/kit/releases/download/0.0.7/kit_0.0.7_Linux_arm64.tar.gz"
-      sha256 "d924bf5f67aeb6df72e0b69cd3cebd27816c246bf180ddda681d2ff8a9e87a7d"
+      url "https://github.com/jdhayford/kit/releases/download/0.0.8/kit_0.0.8_Linux_arm64.tar.gz"
+      sha256 "29475a337c375db8a7d2c5a535b70ebe8876d859e5a5328ed2d68f88f1092abf"
+
+      def install
+        bin.install "kit"
+      end
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/jdhayford/kit/releases/download/0.0.8/kit_0.0.8_Linux_x86_64.tar.gz"
+      sha256 "3b75bd57fcd464c9fcd3c5343442f051ac25a9f25f45a5adcd66d4f0725c5705"
+
+      def install
+        bin.install "kit"
+      end
     end
   end
 
   depends_on "git"
   depends_on "zsh" => :optional
-
-  def install
-    bin.install "kit"
-  end
 end
